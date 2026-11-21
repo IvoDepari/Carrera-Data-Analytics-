@@ -1,4 +1,4 @@
-use ventas_tech_db
+USE ventas_tech_db;
 
 -- Consulta 1 — Vista base del proyecto (INNER JOIN)
 -- Propósito: unificar en una sola tabla descriptiva las ventas con los datos del cliente, producto, categoría y ciudad para alimentar Power BI.
@@ -25,7 +25,7 @@ ON cat.id_categoria = pro.id_categoria;
 
 
 -- Consulta 2 — Clientes sin ventas (LEFT JOIN)
--- Propósito: detectar clientes registrados que nunca compraron, para contactarlos.
+-- Propósito: Detectar clientes registrados que nunca compraron, para que el área de CRM los contacte.
 SELECT 
 cli.nombre AS [Cliente],
 cli.email AS [mail],
@@ -35,11 +35,11 @@ LEFT JOIN ventas AS ven
 ON cli.id_cliente = ven.id_cliente
 WHERE ven.id_cliente IS NULL;
 
--- Hallazgo: Aparecieron 0 resultados. Lo que significa para CRM que al 100% de los clientes se les realizo una venta y deben enfocarse en fidelizacion.
+-- Hallazgo: Aparecieron 0 resultados. Para el área de CRM esto significa que al 100% de los clientes se les realizó una venta y el foco debe estar en fidelización.
 
 
 -- Consulta 3 — Productos sin ventas (LEFT JOIN)
--- Proposito: Identificar los productos que nunca se vendieron y asi planificar una estrategia de venta. 
+-- Propósito: Identificar los productos que nunca se vendieron para que el área de Producto planifique una estrategia de venta. 
 SELECT 
 pro.nombre_producto AS [Producto],
 cat.nombre_categoria AS [Categoria],
@@ -51,8 +51,19 @@ INNER JOIN categorias AS cat
 ON cat.id_categoria = pro.id_categoria
 WHERE ven.id_producto IS NULL;
 
--- Hallazgo: Aparecieron 0 productos sin ventas. Para el area de Producto esto implica que no hay articulos con stock inmovilizado ni sin rotacion.
+-- Hallazgo: Aparecieron 0 productos sin ventas. Para el área de Producto esto implica que no hay artículos con stock inmovilizado ni sin rotación.
+
+
 -- Consulta 4 — Consolidado por canal (UNION ALL)
+-- Propósito: Saber qué cantidad de dinero se recauda en cada canal.
+SELECT canal, SUM(total) AS total_canal
+FROM (
+    SELECT fecha_venta, cantidad * precio_unitario AS total, 'Online' AS canal
+    FROM ventas WHERE cantidad * precio_unitario > 1000
+    UNION ALL
+    SELECT fecha_venta, cantidad * precio_unitario AS total, 'Presencial' AS canal
+    FROM ventas WHERE cantidad * precio_unitario <= 1000
+) AS consolidado
+GROUP BY canal;
 
-
--- Hallazgo:
+-- Hallazgo: El canal Online lidera la recaudación con $3,600.00, frente a $2,844.00 del canal Presencial.
