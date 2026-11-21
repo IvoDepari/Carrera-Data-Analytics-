@@ -1,0 +1,58 @@
+use ventas_tech_db
+
+-- Consulta 1 — Vista base del proyecto (INNER JOIN)
+-- Propósito: unificar en una sola tabla descriptiva las ventas con los datos del cliente, producto, categoría y ciudad para alimentar Power BI.
+SELECT 
+ven.fecha_venta AS [Fecha],
+cli.id_cliente AS [Id del Cliente],
+cli.nombre AS [Cliente],
+cli.ciudad AS [Ciudad],
+pro.nombre_producto AS [Producto],
+cat.nombre_categoria AS [Categoria],
+ven.cantidad AS [Cantidad],
+ven.precio_unitario AS [Precio],
+(ven.precio_unitario * ven.cantidad) AS Total
+
+FROM ventas AS ven
+INNER JOIN clientes AS cli 
+ON cli.id_cliente = ven.id_cliente
+INNER JOIN productos AS pro
+ON pro.id_producto = ven.id_producto
+INNER JOIN categorias AS cat
+ON cat.id_categoria = pro.id_categoria;
+
+-- Hallazgo: Se registran 10 ventas, donde la categoria "Computacion" es la que concentra mayor parte de la facturacion.
+
+
+-- Consulta 2 — Clientes sin ventas (LEFT JOIN)
+-- Propósito: detectar clientes registrados que nunca compraron, para contactarlos.
+SELECT 
+cli.nombre AS [Cliente],
+cli.email AS [mail],
+cli.fecha_registro AS [Fecha de Registro]
+FROM clientes AS cli
+LEFT JOIN ventas AS ven
+ON cli.id_cliente = ven.id_cliente
+WHERE ven.id_cliente IS NULL;
+
+-- Hallazgo: Aparecieron 0 resultados. Lo que significa para CRM que al 100% de los clientes se les realizo una venta y deben enfocarse en fidelizacion.
+
+
+-- Consulta 3 — Productos sin ventas (LEFT JOIN)
+-- Proposito: Identificar los productos que nunca se vendieron y asi planificar una estrategia de venta. 
+SELECT 
+pro.nombre_producto AS [Producto],
+cat.nombre_categoria AS [Categoria],
+pro.precio AS [Precio]
+FROM productos AS pro
+LEFT JOIN ventas AS ven
+ON pro.id_producto = ven.id_producto
+INNER JOIN categorias AS cat
+ON cat.id_categoria = pro.id_categoria
+WHERE ven.id_producto IS NULL;
+
+-- Hallazgo: Aparecieron 0 productos sin ventas. Para el area de Producto esto implica que no hay articulos con stock inmovilizado ni sin rotacion.
+-- Consulta 4 — Consolidado por canal (UNION ALL)
+
+
+-- Hallazgo:
